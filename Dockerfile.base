@@ -6,7 +6,7 @@
 
 ARG UBUNTU_RELEASE=20.04
 ARG CUDA_VERSION=11.4.2
-FROM nvcr.io/nvidia/cudagl:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_RELEASE}
+FROM nvcr.io/nvidia/cudagl:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_RELEASE} AS base
 
 LABEL maintainer="https://github.com/SgSiegens"
 
@@ -36,6 +36,8 @@ RUN apt-get clean && \
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
+
+FROM base AS updated-ubuntu
 
 # Desktop + tools
 # TODO: figure out which of these packages we actually realy need
@@ -111,6 +113,8 @@ RUN dpkg --add-architecture i386 && \
     rm -rf /tmp/* && \
     rm -rf /var/lib/apt/lists/*
 
+FROM updated-ubuntu AS with-packages
+
 # Install VirtualGL
 ARG VIRTUALGL_VERSION=3.1
 ARG VIRTUALGL_URL="https://sourceforge.net/projects/virtualgl/files"
@@ -132,6 +136,8 @@ ENV VGL_REFRESHRATE=60
 ENV VGL_ISACTIVE=1
 ENV VGL_DISPLAY=egl
 ENV VGL_WM=1
+
+FROM with-packages AS with-packages-and-gl
 
 # ----------------------------------------------------
 # ----------- TrackMania Installation Section --------
@@ -204,6 +210,8 @@ RUN mkdir -p /home/${USERNAME}/.wine/drive_c/users/${USERNAME}/Documents/TMInter
 COPY --chown=${USERNAME}:${USERNAME} game-data/TMInterface/ /home/${USERNAME}/.wine/drive_c/users/${USERNAME}/Documents/TMInterface/
 COPY --chown=${USERNAME}:${USERNAME} game-data/TmForever/ /home/${USERNAME}/.wine/drive_c/users/${USERNAME}/Documents/TmForever/
 COPY --chown=${USERNAME}:${USERNAME} game-data/TMLoader/ /home/${USERNAME}/.wine/drive_c/Program_Files_x86/TmNationsForever/
+
+FROM with-packages-and-gl AS tmnf-base
 
 # ----------------------------------------------------
 # --------------   VNC Setup -------------------------
