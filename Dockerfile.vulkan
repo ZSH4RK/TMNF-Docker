@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=tmnf-base:latest
+ARG BASE_IMAGE=zsh4rk/trackmania_rl_framework:base-1.0.1
 FROM ${BASE_IMAGE}
 
 USER root
