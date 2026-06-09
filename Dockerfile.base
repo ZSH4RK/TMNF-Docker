@@ -107,7 +107,9 @@ RUN dpkg --add-architecture i386 && \
 	    x11vnc \
         x11-utils \
         tigervnc-standalone-server \
-        tigervnc-common	&&\
+        tigervnc-common \
+        novnc \
+        python3-websockify &&\
     curl -fsSL -o /tmp/vdpau-va-driver.deb "https://launchpad.net/~saiarcot895/+archive/ubuntu/chromium-dev/+files/vdpau-va-driver_0.7.4-6ubuntu2~ppa1~18.04.1_amd64.deb" && \
     apt-get install --no-install-recommends -y /tmp/vdpau-va-driver.deb && \
     rm -rf /tmp/* && \
@@ -245,8 +247,9 @@ RUN chmod 755 /etc/base-entrypoint.sh && \
     chmod 755 /usr/local/bin/start-vnc.sh && \
     chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 
-# Expose VNC port
+# Expose VNC port and noVNC web port
 EXPOSE 5900
+EXPOSE 6080
 
 USER ${USERNAME}
 WORKDIR /home/${USERNAME}

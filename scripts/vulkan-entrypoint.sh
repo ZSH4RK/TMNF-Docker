@@ -24,4 +24,12 @@ echo "Fluxbox started."
 
 echo "Session Running."
 
+if [ "${NOVNC_ENABLE}" = "true" ]; then
+    x11vnc -display "${DISPLAY}" -rfbauth /home/wineuser/.vnc/passwd \
+        -forever -shared -bg -quiet -o /home/wineuser/logs/x11vnc.log
+    websockify --web /usr/share/novnc/ --log-file /home/wineuser/logs/websockify.log \
+        6080 localhost:5900 &
+    echo "noVNC available at http://localhost:6080"
+fi
+
 "$@"

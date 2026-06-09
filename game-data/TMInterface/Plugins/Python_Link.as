@@ -35,6 +35,7 @@ int next_frame_requested_H = -1;
 int next_frame_requested_W = -1;
 int on_step_period = 10;
 bool on_connect_queued = false;
+string pending_command = "";
 auto@ simManager = GetSimulationManager();
 
 void Init_Socket(){
@@ -196,7 +197,8 @@ int HandleMessage()
             if(debug){
                 print("Server: command "+command+" received");
             }
-            ExecuteCommand(command);
+            // Queue for execution in Render() so it works in menus too
+            pending_command = command;
             break;
         }
 
@@ -342,13 +344,22 @@ void Main()
 //    Init_Socket();
 //}
 
+bool map_command_sent = false;
+
 void OnGameStateChanged(TM::GameState state){
     if (state == TM::GameState::LocalRace) {
         Graphics::FocusGameWindow();
     }
-    if(state == TM::GameState::Menus && on_connect_queued){
-        OnConnect();
-        on_connect_queued = false;
+    if(state == TM::GameState::Menus) {
+        log("State: Menus — loading A01-Race");
+        if(!map_command_sent) {
+            map_command_sent = true;
+            ExecuteCommand("map A01-Race.Challenge.Gbx");
+        }
+        if(on_connect_queued){
+            OnConnect();
+            on_connect_queued = false;
+        }
     }
 }
 
@@ -365,6 +376,18 @@ void Render(){
         else{
             on_connect_queued = true;
         }
+    }
+    // Drain any incoming client messages so CExecuteCommand gets queued
+    // even when no simulation is running (i.e. from menus).
+    if(@clientSock !is null) {
+        while(clientSock.Available > 0) {
+            HandleMessage();
+        }
+    }
+    // Execute any command queued by CExecuteCommand
+    if(pending_command != "") {
+        ExecuteCommand(pending_command);
+        pending_command = "";
     }
     if(next_frame_requested_H>=0){
         const auto@ frame = Graphics::CaptureScreenshot(vec2(next_frame_requested_W,next_frame_requested_H));

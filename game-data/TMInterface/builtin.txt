@@ -8,7 +8,7 @@ set "bf_play_sound" false
 set "save_triggers" false
 set "replay_speed" 1
 set "log_simulation" false
-set "autorewind" false
+set "autorewind" true
 set "discord_presence" false
 set "background" "none"
 set "trigger_default_color" "255,38,38,76"
@@ -23,7 +23,7 @@ set "bf_modify_count" 5
 set "start_respawn" true
 set "input_steer_display" true
 set "bf_max_steer_diff" 10000
-set "sim_speed" 5
+set "sim_speed" 1
 set "bf_max_time_diff" 0
 set "bf_override_stop_time" 0
 set "bf_result_filename" "result.txt"

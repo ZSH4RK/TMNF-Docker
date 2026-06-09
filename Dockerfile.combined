@@ -1,0 +1,44 @@
+ARG BASE_IMAGE=tmnf-test:latest
+FROM ${BASE_IMAGE}
+
+USER root
+
+# Install uv for Python dependency management
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Copy TMRC agent code and project config
+COPY --chown=wineuser:wineuser TMRC/agent /home/wineuser/tmrc/agent
+COPY --chown=wineuser:wineuser TMRC/pyproject.toml /home/wineuser/tmrc/pyproject.toml
+COPY --chown=wineuser:wineuser TMRC/uv.lock /home/wineuser/tmrc/uv.lock
+
+# Pre-install Python 3.12 + deps (uv manages its own Python)
+RUN cd /home/wineuser/tmrc && \
+    HOME=/home/wineuser uv sync && \
+    chown -R wineuser:wineuser /home/wineuser/tmrc /home/wineuser/.cache
+
+# Replace TMLoader UI with the auto-launch version (fires autoLaunch() on startup)
+COPY --chown=wineuser:wineuser TMRC/plugins/index.jsx \
+    /home/wineuser/.wine/drive_c/Program_Files_x86/TmNationsForever/ui/layouts/default/index.jsx
+# Use profile that passes A01-Race as a launch arg (skips in-game menu navigation)
+COPY --chown=wineuser:wineuser TMRC/plugins/default.yaml \
+    /home/wineuser/.wine/drive_c/Program_Files_x86/TmNationsForever/database/TmForever/profiles/default.yaml
+# Deploy updated Python_Link plugin (overrides the game-data version from the base image)
+COPY --chown=wineuser:wineuser TMRC/plugins/Python_Link.as \
+    /home/wineuser/.wine/drive_c/users/wineuser/Documents/TMInterface/Plugins/Python_Link.as
+
+# Copy A01-Race from the game installation into Tracks/Challenges/ alongside Level1 and other maps.
+RUN cp "${WINEPREFIX}/drive_c/Program_Files_x86/TmNationsForever/GameData/Tracks/Campaigns/Nations/White/A01-Race.Challenge.Gbx" \
+       "${WINEPREFIX}/drive_c/users/wineuser/Documents/TmForever/Tracks/Challenges/" && \
+    chown wineuser:wineuser "${WINEPREFIX}/drive_c/users/wineuser/Documents/TmForever/Tracks/Challenges/A01-Race.Challenge.Gbx"
+
+
+COPY TMNF-Docker/scripts/base-entrypoint.sh /etc/base-entrypoint.sh
+RUN chmod 755 /etc/base-entrypoint.sh
+COPY TMNF-Docker/scripts/run-agent.sh /usr/local/bin/run-agent.sh
+RUN chmod 755 /usr/local/bin/run-agent.sh
+
+ENV TMNF_DIR=/home/wineuser/.wine/drive_c/Program_Files_x86/TmNationsForever
+
+USER wineuser
+WORKDIR /home/wineuser
+CMD ["/usr/local/bin/run-agent.sh"]
