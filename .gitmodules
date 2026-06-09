@@ -1,0 +1,3 @@
+[submodule "TMRC"]
+	path = TMRC
+	url = https://github.com/ZSH4RK/TMRC.git

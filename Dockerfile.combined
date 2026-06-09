@@ -32,9 +32,9 @@ RUN cp "${WINEPREFIX}/drive_c/Program_Files_x86/TmNationsForever/GameData/Tracks
     chown wineuser:wineuser "${WINEPREFIX}/drive_c/users/wineuser/Documents/TmForever/Tracks/Challenges/A01-Race.Challenge.Gbx"
 
 
-COPY TMNF-Docker/scripts/base-entrypoint.sh /etc/base-entrypoint.sh
+COPY scripts/base-entrypoint.sh /etc/base-entrypoint.sh
 RUN chmod 755 /etc/base-entrypoint.sh
-COPY TMNF-Docker/scripts/run-agent.sh /usr/local/bin/run-agent.sh
+COPY scripts/run-agent.sh /usr/local/bin/run-agent.sh
 RUN chmod 755 /usr/local/bin/run-agent.sh
 
 ENV TMNF_DIR=/home/wineuser/.wine/drive_c/Program_Files_x86/TmNationsForever
