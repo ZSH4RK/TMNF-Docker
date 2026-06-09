@@ -1,0 +1,15 @@
+services:
+  tmnf:
+    build:
+      context: .
+      dockerfile: Dockerfile.combined
+    image: tmnf-full:latest
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NOVNC_ENABLE=true
+    ports:
+      - "6080:6080"
+      - "5900:5900"
+    stdin_open: true
+    tty: true
