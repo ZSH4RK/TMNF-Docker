@@ -8,8 +8,13 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NOVNC_ENABLE=true
+      - TM_NUM_INSTANCES=1     # number of TrackMania instances to run in parallel
+      - TM_BASE_PORT=8775      # first TMInterface port; instance i uses TM_BASE_PORT + i
+      - TM_GAME_SPEED=1.0      # simulation speed multiplier (e.g. 4.0 = 4x real-time)
     ports:
       - "6080:6080"
       - "5900:5900"
+    volumes:
+      - ../Tracks:/home/wineuser/tmrc/Tracks:ro
     stdin_open: true
     tty: true

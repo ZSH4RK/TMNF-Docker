@@ -351,10 +351,10 @@ void OnGameStateChanged(TM::GameState state){
         Graphics::FocusGameWindow();
     }
     if(state == TM::GameState::Menus) {
-        log("State: Menus — loading A01-Race");
+        log("State: Menus — loading A03-Race");
         if(!map_command_sent) {
             map_command_sent = true;
-            ExecuteCommand("map A01-Race.Challenge.Gbx");
+            ExecuteCommand("map A03-Race.Challenge.Gbx");
         }
         if(on_connect_queued){
             OnConnect();
