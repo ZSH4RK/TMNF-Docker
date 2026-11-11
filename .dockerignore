@@ -1,1 +1,5 @@
 *.dxvk-cache
+**/__pycache__
+TMRC/.venv
+TMRC/tm.log
+TMRC/agent/tmp

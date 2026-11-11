@@ -29,7 +29,7 @@ if you have not done so already.
 ---
 
 ## Build the Container
-This repository provides two Dockerfiles: `Dockerfile.base` and `Dockerfile.vulkan`. The Base file acts as the primary image, building the entire environment including the game and 
+This repository provides two Dockerfiles: `docker/Dockerfile.base` and `docker/Dockerfile.vulkan`. The Base file acts as the primary image, building the entire environment including the game and 
 all necessary software, utilizing VirtualGL for rendering. The Vulkan Dockerfile builds on top of the base image and serves as an extension that installs Vulkan and DXVK into the 
 environment. It sets DXVK as the default rendering backend when running TMNF through Wine.
 
@@ -41,13 +41,13 @@ Clone the repository and build the image by running:
 ```bash
 git clone https://github.com/SgSiegens/TMNF-Docker 
 cd TMNF-Docker
-docker build -t <container_name>:<tag> -f Dockerfile.base .
+docker build -t <container_name>:<tag> -f docker/Dockerfile.base .
 ```
 
 ### Build the Vulkan Image
 If you wish to also build the Vulkan image, you must first build the base image as described above, and then run:
 ```bash
-docker build --build-arg BASE_IMAGE=<name_of_the_base_image_built_earlier>:<tag> -t <container_name>:<tag> -f Dockerfile.vulkan .
+docker build --build-arg BASE_IMAGE=<name_of_the_base_image_built_earlier>:<tag> -t <container_name>:<tag> -f docker/Dockerfile.vulkan .
 
 ```
 ## Running the Container

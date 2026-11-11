@@ -6,15 +6,21 @@ USER root
 # Install uv for Python dependency management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Copy TMRC agent code and project config
-COPY --chown=wineuser:wineuser TMRC/agent /home/wineuser/tmrc/agent
+# Copy project config
 COPY --chown=wineuser:wineuser TMRC/pyproject.toml /home/wineuser/tmrc/pyproject.toml
 COPY --chown=wineuser:wineuser TMRC/uv.lock /home/wineuser/tmrc/uv.lock
+COPY --chown=wineuser:wineuser TMRC/.python-version /home/wineuser/tmrc/.python-version
 
 # Pre-install Python 3.12 + deps (uv manages its own Python)
 RUN cd /home/wineuser/tmrc && \
     HOME=/home/wineuser uv sync && \
     chown -R wineuser:wineuser /home/wineuser/tmrc /home/wineuser/.cache
+
+# Copy TMRC agent code. After the install, so editing code doesn't reinstall deps.
+COPY --chown=wineuser:wineuser TMRC/agent /home/wineuser/tmrc/agent
+
+# Open a scaled, auto-connecting view from the noVNC root URL
+RUN echo '<meta http-equiv="refresh" content="0; url=vnc.html?autoconnect=true&resize=scale">' > /usr/share/novnc/index.html
 
 # Replace TMLoader UI with the auto-launch version (fires autoLaunch() on startup)
 COPY --chown=wineuser:wineuser TMRC/plugins/index.jsx \

@@ -33,7 +33,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile.base
+          file: ./docker/Dockerfile.base
           push: true
           tags: ghcr.io/sgsiegens/tmnf-docker-base:latest
 
@@ -57,7 +57,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile.vulkan
+          file: ./docker/Dockerfile.vulkan
           push: true
           build-args: |
             BASE_IMAGE=ghcr.io/sgsiegens/tmnf-docker-base:latest

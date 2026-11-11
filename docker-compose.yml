@@ -2,19 +2,32 @@ services:
   tmnf:
     build:
       context: .
-      dockerfile: Dockerfile.combined
+      dockerfile: docker/Dockerfile.combined
     image: tmnf-full:latest
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NOVNC_ENABLE=true
-      - TM_NUM_INSTANCES=1     # number of TrackMania instances to run in parallel
+      - TM_NUM_INSTANCES=5     # number of TrackMania instances to run in parallel
       - TM_BASE_PORT=8775      # first TMInterface port; instance i uses TM_BASE_PORT + i
-      - TM_GAME_SPEED=1.0      # simulation speed multiplier (e.g. 4.0 = 4x real-time)
+      - TM_VIEW_INSTANCES=1    # how many instances can be watched; instance i uses ports 5900+i (VNC) and 6080+i (noVNC)
+      - VNC_SCREEN=648x540x24  # screen size of each watchable instance; just fits the game's 640x480 window, title bar and taskbar
+      - TM_LOAD_CHECKPOINT=${TM_LOAD_CHECKPOINT:-false} # true = resume from the best checkpoint, latest = from the last snapshot
+      - TM_MODE=train          # train = SAC vector trainer (prints [PB] lines); anything else = plain driving agents
+      - TM_GAME_SPEED=5.0      # simulation speed multiplier (matches game-data/TMInterface/builtin.txt's sim_speed 5)
+      - TM_STEP_MS=50          # game time between agent decisions; trained models only drive properly at the rate they trained at
     ports:
-      - "6080:6080"
-      - "5900:5900"
+      # Localhost only: the VNC password is a fixed default. Set VNC_BIND=0.0.0.0
+      # (or a LAN address) to watch from another machine.
+      - "${VNC_BIND:-127.0.0.1}:6080-6084:6080-6084"
+      - "${VNC_BIND:-127.0.0.1}:5900-5904:5900-5904"
     volumes:
       - ../Tracks:/home/wineuser/tmrc/Tracks:ro
+      # Trained SAC checkpoints + best-run recordings — bind-mounted (not a
+      # named volume) so they survive `docker compose up --build` too, not
+      # just container stop/start. wineuser is uid 1000 in the image, same
+      # as the typical host user, so no permission remapping needed.
+      - ./TMRC/agent/tmp:/home/wineuser/tmrc/agent/tmp
     stdin_open: true
     tty: true
+    stop_grace_period: 60s     # time for the trainer to save a snapshot before being killed
