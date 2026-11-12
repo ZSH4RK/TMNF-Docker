@@ -3,19 +3,45 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.combined
+      args:
+        # Recorded in every run's manifest. Git isn't available inside the
+        # image, so pass it in: TMRC_GIT_COMMIT=$(git -C TMRC rev-parse HEAD) docker compose up --build
+        # Runs are identified by a hash of their code either way.
+        TMRC_GIT_COMMIT: ${TMRC_GIT_COMMIT:-unknown}
     image: tmnf-full:latest
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
-      - NOVNC_ENABLE=true
-      - TM_NUM_INSTANCES=5     # number of TrackMania instances to run in parallel
-      - TM_BASE_PORT=8775      # first TMInterface port; instance i uses TM_BASE_PORT + i
-      - TM_VIEW_INSTANCES=1    # how many instances can be watched; instance i uses ports 5900+i (VNC) and 6080+i (noVNC)
-      - VNC_SCREEN=648x540x24  # screen size of each watchable instance; just fits the game's 640x480 window, title bar and taskbar
+      - NOVNC_ENABLE=${NOVNC_ENABLE:-true}
+      - TM_NUM_INSTANCES=${TM_NUM_INSTANCES:-5} # number of TrackMania instances to run in parallel
+      - TM_BASE_PORT=${TM_BASE_PORT:-8775} # first TMInterface port; instance i uses TM_BASE_PORT + i
+      - TM_VIEW_INSTANCES=${TM_VIEW_INSTANCES:-1} # how many instances can be watched; instance i uses ports 5900+i (VNC) and 6080+i (noVNC)
+      - VNC_SCREEN=${VNC_SCREEN:-648x540x24} # screen size of each watchable instance; just fits the game's 640x480 window, title bar and taskbar
       - TM_LOAD_CHECKPOINT=${TM_LOAD_CHECKPOINT:-false} # true = resume from the best checkpoint, latest = from the last snapshot
-      - TM_MODE=train          # train = SAC vector trainer (prints [PB] lines); anything else = plain driving agents
-      - TM_GAME_SPEED=5.0      # simulation speed multiplier (matches game-data/TMInterface/builtin.txt's sim_speed 5)
-      - TM_STEP_MS=50          # game time between agent decisions; trained models only drive properly at the rate they trained at
+      - TM_MODE=${TM_MODE:-train} # train | train_single | eval | verify | script | drive (see scripts/run-agent.sh)
+      # --- results recording (TMRC/results/<run>/, see TMRC/agent/experiments/) ---
+      - TM_RUN_NAME=${TM_RUN_NAME:-}         # label added to the run's directory name
+      - TM_SEED=${TM_SEED:-}                 # empty = random, recorded in the manifest
+      - TM_SAVE_REPLAYS=${TM_SAVE_REPLAYS:-best} # best | finished | all | none
+      - TM_AGENT=${TM_AGENT:-agent:my_agent.py}  # what drive mode drives
+      - TM_EVAL_AGENT=${TM_EVAL_AGENT:-sac:tmp/sac} # eval: sac:<dir> | agent:<file.py> | forward | random
+      - TM_EVAL_EPISODES=${TM_EVAL_EPISODES:-5}
+      - TM_REPLAY=${TM_REPLAY:-}             # verify: replay .npz, e.g. <run>/replays/<file>.npz
+      - TM_SCRIPT=${TM_SCRIPT:-}             # script: your own file, e.g. agent/examples/hill_climb.py
+      - TM_GAME_SPEED=${TM_GAME_SPEED:-5.0} # simulation speed multiplier (matches game-data/TMInterface/builtin.txt's sim_speed 5)
+      - TM_STEP_MS=${TM_STEP_MS:-50} # game time between agent decisions; trained models only drive properly at the rate they trained at
+      # Passed through only when set in your shell (e.g. `TM_MAP_NAME=X docker compose up`);
+      # otherwise the code's own defaults apply. See TMRC/docs/08-settings-reference.md.
+      - TM_MAP_NAME
+      - TM_MAP_FILE
+      - TM_N_STEPS
+      - TM_UPDATES_PER_STEP
+      - TM_EVAL_ONLY
+      - TM_TORCH_THREADS
+      - TM_VERIFY_TOL_M
+      - TM_WEIGHTS
+      - TM_ITERATIONS
+      - TM_NOISE
     ports:
       # Localhost only: the VNC password is a fixed default. Set VNC_BIND=0.0.0.0
       # (or a LAN address) to watch from another machine.
@@ -28,6 +54,8 @@ services:
       # just container stop/start. wineuser is uid 1000 in the image, same
       # as the typical host user, so no permission remapping needed.
       - ./TMRC/agent/tmp:/home/wineuser/tmrc/agent/tmp
+      # Recorded runs: manifests, episode CSVs, replays, metrics, checkpoints.
+      - ./TMRC/results:/home/wineuser/tmrc/results
     stdin_open: true
     tty: true
     stop_grace_period: 60s     # time for the trainer to save a snapshot before being killed

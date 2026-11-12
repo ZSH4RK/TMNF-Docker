@@ -45,6 +45,12 @@ RUN chmod 755 /usr/local/bin/run-agent.sh
 
 ENV TMNF_DIR=/home/wineuser/.wine/drive_c/Program_Files_x86/TmNationsForever
 
+RUN mkdir -p /home/wineuser/tmrc/results && chown wineuser:wineuser /home/wineuser/tmrc/results
+
+# Last, so a new commit only rebuilds this layer. Recorded in run manifests.
+ARG TMRC_GIT_COMMIT=unknown
+ENV TMRC_GIT_COMMIT=${TMRC_GIT_COMMIT}
+
 USER wineuser
 WORKDIR /home/wineuser
 CMD ["/usr/local/bin/run-agent.sh"]
