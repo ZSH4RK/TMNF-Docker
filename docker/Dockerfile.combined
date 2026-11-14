@@ -32,10 +32,13 @@ COPY --chown=wineuser:wineuser TMRC/plugins/default.yaml \
 COPY --chown=wineuser:wineuser TMRC/plugins/Python_Link.as \
     /home/wineuser/.wine/drive_c/users/wineuser/Documents/TMInterface/Plugins/Python_Link.as
 
-# Copy A03-Race from the game installation into Tracks/Challenges/ alongside Level1 and other maps.
-RUN cp "${WINEPREFIX}/drive_c/Program_Files_x86/TmNationsForever/GameData/Tracks/Campaigns/Nations/White/A03-Race.Challenge.Gbx" \
-       "${WINEPREFIX}/drive_c/users/wineuser/Documents/TmForever/Tracks/Challenges/" && \
-    chown wineuser:wineuser "${WINEPREFIX}/drive_c/users/wineuser/Documents/TmForever/Tracks/Challenges/A03-Race.Challenge.Gbx"
+# Copy the competition maps (A01-A03) from the game installation into
+# Tracks/Challenges/, where TMInterface's `map <file>` command looks for them.
+RUN for m in A01 A02 A03; do \
+        cp "${WINEPREFIX}/drive_c/Program_Files_x86/TmNationsForever/GameData/Tracks/Campaigns/Nations/White/${m}-Race.Challenge.Gbx" \
+           "${WINEPREFIX}/drive_c/users/wineuser/Documents/TmForever/Tracks/Challenges/" && \
+        chown wineuser:wineuser "${WINEPREFIX}/drive_c/users/wineuser/Documents/TmForever/Tracks/Challenges/${m}-Race.Challenge.Gbx"; \
+    done
 
 
 COPY scripts/base-entrypoint.sh /etc/base-entrypoint.sh
